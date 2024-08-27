@@ -26,7 +26,7 @@ def check_cargo_installed():
         return False
 
 def Create_Docker_Container():
-    print("\nCREATE DOCKER CONTAINER\n")
+    print("\nCreating Docker Container\n")
     
     # Docker run command
     docker_command = [

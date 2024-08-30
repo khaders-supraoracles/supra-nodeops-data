@@ -1,7 +1,0 @@
-Local: (2024-08-30 12:58:10.687795215 +00:00)	 Utc: (2024-08-30 12:58:10.687815747 UTC)
-
-CMD:
-RefreshRepo(RefreshRepo { url: "https://github.com/khaders-supraoracles/supra-nodeops-data/archive/refs/heads/genesis-ceremony.zip" })
-Output:
-
-

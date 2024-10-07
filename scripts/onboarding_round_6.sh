@@ -5,7 +5,6 @@ SCRIPT_EXECUTION_LOCATION="$(pwd)/supra_configs"
 CONFIG_FILE="$(pwd)/operator_config.toml"
 BASE_PATH="$(pwd)"
 
-
 GITHUB_URL_SSH="git@github.com:Entropy-Foundation/supra-nodeops-data.git"
 
 GRAFANA="https://raw.githubusercontent.com/Entropy-Foundation/supra-node-monitoring-tool/master/nodeops-monitoring-telegraf.sh"
@@ -18,7 +17,6 @@ create_folder_and_files() {
     else
         echo ""
     fi
-
 }
 
 extract_ip() {
@@ -31,9 +29,9 @@ display_questions() {
     echo "2. Select Phase II - Perform Signing Operation"
     echo "3. Select Phase III - Create Genesis Blob"
     echo "4. Select Phase IV - Start the node and other services"
-    echo "5. Exit"
+    echo "5. Select Phase V - Restart the network using snapshot"
+    echo "6. Exit"
 }
-
 
 check_permissions() {
     folder_path="$1"
@@ -44,12 +42,9 @@ check_permissions() {
         echo "Please check write permissions."
         echo "" 
         echo "TERMINATING SCRIPT" 
-
         exit 1
-    fi
-    
+    fi  
 }
-
 
 # Check if Docker is installed
 check_docker_installed() {
@@ -58,8 +53,7 @@ check_docker_installed() {
         echo "Terminating Script"
         echo " "
         exit 1
-    fi
-    
+    fi 
 }
 
 # Check if gCloud is installed
@@ -68,7 +62,6 @@ check_gcloud_installed() {
         echo "gCloud is not installed. Please install gCloud before proceeding."
         exit 1
     fi
-
 }
 
 # Check if the user is not root
@@ -77,10 +70,8 @@ check_not_root() {
         echo "You are running as root. Please run as a non-root user."
         echo ""
         exit 1
-    fi
-    
+    fi  
 }
-
 
 check_toml_cli() {
     if ! command -v toml &> /dev/null
@@ -88,13 +79,11 @@ check_toml_cli() {
         echo "toml-cli could not be found. Please install it to proceed."
         echo "command : pip install toml-cli"
         exit 1
-    fi
-   
+    fi 
 }
 
 check_sha256sum_installed() {
-    if command -v sha256sum >/dev/null 2>&1; then
-        
+    if command -v sha256sum >/dev/null 2>&1; then 
         return 0
     else
         echo "sha256sum is not installed."
@@ -102,10 +91,8 @@ check_sha256sum_installed() {
     fi
 }
 
-
 check_openssl_installed() {
     if command -v openssl >/dev/null 2>&1; then
-        
         return 0
     else
         echo "openssl is not installed."
@@ -115,14 +102,12 @@ check_openssl_installed() {
 
 check_zip_installed() {
     if command -v zip >/dev/null 2>&1; then
-        
         return 0
     else
         echo "zip is not installed, please install zip manually."
         exit 1
     fi
 }
-
 
 check_expect_installation() {
   if ! command -v expect &> /dev/null; then
@@ -134,14 +119,12 @@ check_expect_installation() {
       echo "**WARNING: Could not identify package manager, Please install expect manually."
       exit 1
     fi
-
     echo "Expect is not installed. Install it with:"
     echo "$package_manager expect"
   else
     echo ""
   fi
 }
-
 
 prerequisites() {
     echo ""
@@ -156,7 +139,6 @@ prerequisites() {
     check_zip_installed
     echo "All Checks Passed: ✔ "
 }
-
 
 archive_and_remove_phase_1_files() {
     cd "$SCRIPT_EXECUTION_LOCATION" || exit
@@ -194,11 +176,8 @@ archive_and_remove_phase_1_files() {
     else
         echo "No files found to archive."
     fi
-
-    cd ..
-    
+    cd .. 
 }
-
 
 list_running_docker_containers() {
     running_containers=$(docker ps --format "table {{.ID}}\t{{.Names}}\t{{.Image}}\t{{.Status}}")
@@ -221,7 +200,6 @@ is_supra_running() {
 remove_docker_container() {
     local container_name=$1
     if docker ps -a --format '{{.Names}}' | grep -Eq "^$container_name$"; then
-
         docker stop $container_name
         wait
         docker rm $container_name
@@ -240,7 +218,6 @@ remove_container_prompt() {
     echo "Please Wait..."
     remove_docker_container "$container_name"
 }
-
 
 function configure_operator() {
     echo ""
@@ -287,8 +264,6 @@ function configure_operator() {
     mv "$tmp_file" "$toml_file"
 }
 
-
-
 function create_supra_container() {
     echo ""
     echo "CREATE DOCKER CONTAINER"
@@ -304,7 +279,6 @@ function create_supra_container() {
         return 1
     fi
     
-
     docker run --name "supra_$ip" \
         -v ./supra_configs:/supra/configs \
         --user "$USER_ID:$GROUP_ID" \
@@ -316,7 +290,6 @@ function create_supra_container() {
         --net=host \
         -itd "$supra_docker_image"
 
-
     if [[ $? -eq 0 ]]; then
         echo "Docker container 'supra_$ip' created successfully."
     else
@@ -325,12 +298,10 @@ function create_supra_container() {
     fi
 }
 
-
 create_smr_settings() {
     echo ""
     echo "CREATE SMR SETTINGS TOML FILE "
     echo ""
-
     local local_path="$1"
     local path_passed="${local_path}"
     local smr_settings_file="${path_passed}/smr_settings.toml"
@@ -383,9 +354,7 @@ create_smr_settings() {
 
     [node.database_setup.prune_config]
     epochs_to_retain = 84
-
 EOF
-
 }
 
 function parse_toml() {
@@ -404,7 +373,6 @@ expect "password:" { send "$decoded_password\r" }
 expect "password:" { send "$decoded_password\r" }
 expect eof
 EOF
-
     if [ $? -eq 0 ]; then
         echo ""
         echo "ACTIVATE PROFILE"
@@ -452,7 +420,6 @@ EOF
     cd - > /dev/null
 }
 
-
 function generate_hashmap_phase_1() {
     
     if [[ $# -ne 1 ]]; then
@@ -490,7 +457,6 @@ function generate_hashmap_phase_1() {
     echo "Hashes have been written to $output_file"
 }
 
-
 function generate_hashmap_phase_2() {
     
     local hashmap_file="$1"
@@ -527,8 +493,6 @@ function generate_hashmap_phase_2() {
     echo " "
     echo "Created: $hashmap_file"
 }
-
-
 
 function setup_repository_for_nodeOp() {
     echo ""
@@ -598,8 +562,6 @@ copy_files_to_node_operator_folder() {
     fi
 }
 
-
-
 check_phase_1_files() {
   local DIRECTORY=$1
   local FILES=(
@@ -621,14 +583,12 @@ check_phase_1_files() {
 
 check_phase_2_files() {
 
-  
   local DIRECTORY=$1
   local sig_file=$2
   local FILES=(
     "$sig_file"
     "supra_committees.json"
   )
-
 
   # Check each file
   for FILE in "${FILES[@]}"; do
@@ -802,10 +762,6 @@ function automated_validator_node_setup_and_configuration() {
     create_smr_settings "$SCRIPT_EXECUTION_LOCATION"
     cd $SCRIPT_EXECUTION_LOCATION || { echo "Failed to change directory to $SCRIPT_EXECUTION_LOCATION"; exit 1; }
     generate_and_activate_profile "$CONFIG_FILE"
-    
-    # Call generate_validator_identity with either IP or DNS based on user choice
-    # generate_validator_identity "$IP_ADDRESS" "$DNS_NAME"
-
 
     # Prompt for either IP address or DNS name
     while true; do
@@ -866,7 +822,6 @@ function automated_validator_node_setup_and_configuration() {
     exit 0
 }
 
-
 phase2_fresh_start() {
     local sig_file=$1
     config_file="$2"
@@ -913,7 +868,6 @@ EOF
     exit 0
 }
 
-
 zip_and_clean_phase_3_files() {
   # Define the file and zip names
   BLOB_FILE="genesis.blob"
@@ -937,6 +891,116 @@ zip_and_clean_phase_3_files() {
   fi
 }
 
+start_node(){
+    ip_address=$(extract_ip "operator_config.toml")
+    encoded_pswd=$(parse_toml "password" "$CONFIG_FILE")
+    password=$(echo "$encoded_pswd" | openssl base64 -d -A)
+
+    expect << EOF
+        spawn docker exec -it supra_$ip_address /supra/supra node smr run
+        expect "password:" { send "$password\r" }
+        expect eof
+EOF
+}
+
+grafana_options(){
+
+     while true; do
+            echo "Please select the appropriate option for Grafana"
+            echo "1. Select to Setup Grafana"
+            echo "2. Select to Skip Grafana Setup"
+            read -p "Enter your choice (1 or 2): " choice
+
+            case $choice in
+                1)
+                    while true; do
+                        echo "Adding Grafana dashboard..."
+                        echo "Select your system type"
+                        echo "1. Ubuntu/Debian Linux"
+                        echo "2. Amazon Linux/Centos Linux"
+                        read -p "Enter your system type: " prompt_user
+
+                        if [ "$prompt_user" = "1" ]; then
+                            wget -O nodeops-monitoring-telegraf.sh "$GRAFANA"
+                            chmod +x nodeops-monitoring-telegraf.sh
+                            sudo -E ./nodeops-monitoring-telegraf.sh
+                        elif [ "$prompt_user" = "2" ]; then
+                            wget -O nodeops-monitoring-telegraf-centos.sh "$GRAFANA_CENTOS"
+                            chmod +x nodeops-monitoring-telegraf-centos.sh
+                            sudo -E ./nodeops-monitoring-telegraf-centos.sh
+                        else
+                            echo "Invalid option selected. Please enter 1 for Ubuntu/Debian Linux or 2 for Amazon Linux/Centos Linux."
+                        fi
+                        break
+                    done
+                    break
+                    ;;
+                2)
+                    while true; do
+                        echo "Skip the Grafana Setup"
+                        break
+                    done
+                    break
+                    ;;
+                *)
+                    echo "Invalid choice. Please select 1 for grafana setup or 2 skip the grafana."
+                    ;;
+            esac
+        done
+    
+}
+
+start_supra_container(){
+ip_address=$(grep 'ip_address' operator_config.toml | awk -F'=' '{print $2}' | tr -d ' "')
+echo "Starting supra container"
+    if ! docker start supra_$ip_address; then
+        echo "Failed starting the Validator node container"
+        exit 1
+    else
+        rm "$SCRIPT_EXECUTION_LOCATION/genesis_blob.zip"
+        rm -rf "$SCRIPT_EXECUTION_LOCATION/genesis_blob"
+        echo "Started the Validator Node container."
+    fi
+}
+
+stop_supra_container(){
+ip_address=$(grep 'ip_address' operator_config.toml | awk -F'=' '{print $2}' | tr -d ' "')
+echo "Stopping supra container"
+if ! docker stop supra_$ip_address; then
+    echo "Failed to stop supra container. Exiting..."
+fi
+}
+
+snapshot_download(){
+if ! command -v unzip &> /dev/null; then
+    if [ -f /etc/apt/sources.list ]; then
+        package_manager="sudo apt install"
+        $package_manager -y unzip
+    elif [ -f /etc/yum.repos.d/ ]; then
+        package_manager="sudo yum install"
+        $package_manager -y unzip
+    else
+        echo "**WARNING: Could not identify package manager. Please install unzip manually."
+        exit 1
+    fi
+else
+    echo ""
+fi 
+rm -rf $SCRIPT_EXECUTION_LOCATION/ledger_storage $SCRIPT_EXECUTION_LOCATION/smr_storage/* $SCRIPT_EXECUTION_LOCATION/supra_node_logs $SCRIPT_EXECUTION_LOCATION/latest_snapshot.zip $SCRIPT_EXECUTION_LOCATION/snapshot
+
+# Download snapshot 
+echo "Downloading the latest snapshot......"
+wget -O $SCRIPT_EXECUTION_LOCATION/latest_snapshot.zip https://testnet-snapshot.supra.com/snapshots/latest_snapshot.zip
+
+# Unzip snapshot 
+unzip $SCRIPT_EXECUTION_LOCATION/latest_snapshot.zip -d $SCRIPT_EXECUTION_LOCATION/
+
+# Copy snapshot into smr_database
+cp $SCRIPT_EXECUTION_LOCATION/snapshot/snapshot_*/store/* $SCRIPT_EXECUTION_LOCATION/smr_storage/
+wget -O $SCRIPT_EXECUTION_LOCATION/genesis_blob.zip https://testnet-snapshot.supra.com/configs/genesis_blob.zip
+unzip $SCRIPT_EXECUTION_LOCATION/genesis_blob.zip -d $SCRIPT_EXECUTION_LOCATION/
+cp $SCRIPT_EXECUTION_LOCATION/genesis_blob/genesis.blob $SCRIPT_EXECUTION_LOCATION/
+}
 
 phase3_fresh_start() {
 
@@ -957,7 +1021,7 @@ phase3_fresh_start() {
     echo "_________________________________________________________________________________________________________________"
     echo ""
     echo "                                         ✔ Phase 3: Completed                                                    "
-    echo ""  
+    echo ""  Genesis.blob file is stored at $SCRIPT_EXECUTION_LOCATION/genesis.blob
     echo "_________________________________________________________________________________________________________________"
     echo ""
     echo ""   
@@ -970,17 +1034,41 @@ start_supra_node() {
 
     # Check if container is running
     if docker ps --filter "name=supra_$ip_address" --format '{{.Names}}' | grep -q supra_$ip_address; then
-        expect << EOF
-        spawn docker exec -it supra_$ip_address /supra/supra node smr run
-        expect "password:" { send "$password\r" }
-        expect eof
-EOF
+
+        # Prompt for either IP address or DNS name
+        while true; do
+            echo "Please select the appropriate option to start the node:"
+            echo "1. Start your node within 4 hour window of network start"
+            echo "2. Start your node after 4 hour window of the network start using snapshot"
+            read -p "Enter your choice (1 or 2): " choice
+
+            case $choice in
+                1)
+                    # Prompt for IP address
+                    while true; do
+                        start_node
+                        break
+                    done
+                    break
+                    ;;
+                2)
+                    # Prompt for DNS name
+                    while true; do
+                        snapshot_download
+                        start_node
+                        break
+                    done
+                    break
+                    ;;
+                *)
+                    echo "Invalid choice. Please select 1 for node without snapshot or 2 using the snapshot."
+                    ;;
+            esac
+        done
     else
         echo "Your container supra_$ip_address is not running."
     fi
 }
-
-
 
 while true; do
 
@@ -1042,7 +1130,6 @@ while true; do
                         echo "Please : Start from Phase 1"
                         exit 0
                     fi
-                
             else 
                echo "Phase 1 files are missing"
                echo "                                       Terminating Script                                      "
@@ -1064,14 +1151,11 @@ while true; do
                         echo " "
                         echo "Failure: phase 2 files were altered"
                     fi
-                
             else 
                 echo "Phase 2: Required files are not present"
                 phase2_fresh_start "$FILE_NAME" $CONFIG_FILE $SCRIPT_EXECUTION_LOCATION
 
             fi
-
-            
             read -p "Do you want to override phase 2 (Y/n) :: " decision
 
                 if [[ $decision == [yY] ]]; then
@@ -1080,9 +1164,7 @@ while true; do
                     echo "Archiving Phase 2 Files"
                     zip_and_delete_phase_2_files
                     echo ""
-                
                     phase2_fresh_start  "$FILE_NAME" $CONFIG_FILE $SCRIPT_EXECUTION_LOCATION
-                   
                 else
                     echo "phase 2: override skipped"
                     echo ""
@@ -1103,7 +1185,6 @@ while true; do
 
             check_and_start_container "supra_$IP_ADDRESS"
 
-
             if (check_phase_1_files "$SCRIPT_EXECUTION_LOCATION"); then
                 generate_hashmap_phase_1 "Hashmap_phase_1_latest.toml"
                 echo "Performing hash check for phase 1"
@@ -1118,12 +1199,10 @@ while true; do
                         echo "Please : Start from Phase 1"
                         exit 0
                     fi
-                
             else 
                 echo "Phase 1 : Files are missing"
                 exit 0
             fi
-
                 echo "Checking if phase 2 files are present"
 
             if (check_phase_2_files "$SCRIPT_EXECUTION_LOCATION" "$FILE_NAME"); then
@@ -1187,29 +1266,21 @@ while true; do
             CONFIG_FILE="$BASE_PATH/operator_config.toml"
             enc_password=$(grep '^password' "$CONFIG_FILE" | awk -F' = ' '{print $2}' | tr -d '"')
             decoded_password=$(echo "$enc_password" | openssl base64 -d -A)
-
-            echo "Adding Grafana dashboard..."
-            echo "Select your system type"
-            echo "1. Ubuntu/Debian Linux"
-            echo "2. Amazon Linux/Centos Linux"
-            read -p "Enter your system type: " prompt_user
-
-            if [ "$prompt_user" = "1" ]; then
-                wget "$GRAFANA"
-                chmod +x nodeops-monitoring-telegraf.sh
-                sudo ./nodeops-monitoring-telegraf.sh
-            elif [ "$prompt_user" = "2" ]; then
-                wget "$GRAFANA_CENTOS"
-                chmod +x nodeops-monitoring-telegraf-centos.sh
-                sudo ./nodeops-monitoring-telegraf-centos.sh
-            else
-                echo "Invalid option selected. Please enter 1 for Ubuntu/Debian Linux or 2 for Amazon Linux/Centos Linux."
-            fi
-
+            grafana_options
             echo "Starting the Node"
             start_supra_node "$decoded_password" "$IP_ADDRESS"
             ;;
         5)
+            echo "Restart the node using snapshot"
+            while true; do
+                stop_supra_container
+                snapshot_download
+                start_supra_container
+                start_node
+                break
+            done
+            ;;
+        6)
             echo "Exit the script"
             exit 0
             ;;
